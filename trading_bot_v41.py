@@ -535,7 +535,7 @@ class TradingEnv(gym.Env):
             price = self.prices.get(asset + "USDT", 0.0)
             
             # Добавляем базовые данные: цена актива, баланс актива, текущий баланс USDT
-            obs.extend([price, self.asset + "USDT"_balances.get(asset + "USDT", 0), self.usdt_balance])
+            obs.extend([price, self.asset_balances.get(asset + "USDT", 0), self.usdt_balance])
 
             # Обновляем индикаторы, если цена изменилась с прошлого шага
             if self.cached_prices[asset_symbol] != price:
@@ -662,6 +662,14 @@ class TradingEnv(gym.Env):
         """
         Выполняет шаг симуляции торговой среды, обновляет состояние портфеля и рассчитывает награду.
         """
+        # Если actions скаляр, преобразуем его в список действий
+        if not isinstance(actions, (list, np.ndarray)):
+            actions = [actions]
+
+        # Убедитесь, что длина списка соответствует количеству активов
+        if len(actions) != self.num_assets:
+            raise ValueError(f"Длина actions ({len(actions)}) не соответствует количеству активов ({self.num_assets}).")
+    
         self.update_prices()  # Обновляем текущие цены
         self.last_action = actions
         total_reward = 0.0
